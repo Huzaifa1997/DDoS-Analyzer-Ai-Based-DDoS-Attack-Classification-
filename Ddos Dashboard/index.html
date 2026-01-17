@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DDoS Batch Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Chart.js DataLabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="logo1.png" type="image/png">
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <img src="./assets/logo1.png" alt="DDoS Analyzer Logo" class="logo" width="180" height="60">
+    </div>
+    
+    <div class="sidebar-menu">
+      <div class="menu-item active" id="dashboardBtn">
+        <i class="fas fa-chart-line"></i>
+        <span>Dashboard</span>
+      </div>
+      <div class="menu-item" id="settingsBtn">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </div>
+    </div>
+    
+    <!-- Upload Section -->
+    <div class="upload-section" id="uploadSection">
+      <h3><i class="fas fa-upload"></i> Upload Dataset</h3>
+      <div class="file-upload" id="fileUploadArea">
+        <i class="fas fa-file-csv"></i>
+        <p>Click to upload CSV file</p>
+        <p class="file-format">Supports: CSV, JSON, TXT</p>
+        <input type="file" id="fileInput" accept=".csv,.json,.txt">
+      </div>
+      
+      <div class="upload-actions">
+        <button class="btn analyze-btn" id="analyzeBtn" disabled>
+          <i class="fas fa-chart-bar"></i> Analyze Dataset
+        </button>
+        <button class="btn report-btn" id="generateReportBtn" disabled>
+          <i class="fas fa-file-pdf"></i> Generate Report
+        </button>
+      </div>
+      
+      <div class="upload-note">
+        <i class="fas fa-info-circle"></i>
+        <p>Upload network traffic data for batch analysis. Results will appear below.</p>
+      </div>
+    </div>
+    
+    <!-- Settings Panel (Hidden by default) -->
+    <div class="settings-panel" id="settingsPanel" style="display: none;">
+      <h3><i class="fas fa-cog"></i> Settings</h3>
+      
+      <div class="setting-group">
+        <h4>Theme</h4>
+        <div class="theme-options">
+          <button class="theme-btn active" data-theme="light">
+            <i class="fas fa-sun"></i>
+            <span>Light</span>
+          </button>
+          <button class="theme-btn" data-theme="dark">
+            <i class="fas fa-moon"></i>
+            <span>Dark</span>
+          </button>
+          <button class="theme-btn" data-theme="blue">
+            <i class="fas fa-palette"></i>
+            <span>Blue</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <h4>Chart Style</h4>
+        <div class="chart-style-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="showLabels" checked>
+            <span>Show chart labels</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="animateCharts" checked>
+            <span>Animate charts</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <h4>Report Options</h4>
+        <div class="report-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="includeCharts" checked>
+            <span>Include charts in PDF</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="includeData" checked>
+            <span>Include dataset info</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <h4>Reset Dashboard</h4>
+        <button class="btn reset-btn" id="resetBtn">
+          <i class="fas fa-redo"></i> Reset to Default
+        </button>
+      </div>
+    </div>
+    
+    <!-- System Status -->
+    <div class="system-status">
+      <div class="status-item">
+        <i class="fas fa-database"></i>
+        <div>
+          <span class="status-label">Ready for Analysis</span>
+          <span class="status-desc">No dataset loaded</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main" id="mainContent">
+    <!-- Header -->
+    <header class="main-header">
+      <div class="header-title">
+        <h1><i class="fas fa-shield-alt"></i> DDoS Batch Analysis Dashboard</h1>
+        <p class="subtitle">Offline dataset processing and visualization</p>
+      </div>
+      <div class="header-info">
+        <div class="info-item">
+          <i class="far fa-clock"></i>
+          <span id="currentTime">--:-- --</span>
+        </div>
+        <div class="info-item">
+          <i class="fas fa-microchip"></i>
+          <span>Batch Processing Mode</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Initial State - Upload Prompt -->
+    <div class="initial-state" id="initialState">
+      <div class="empty-state">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <h2>No Dataset Loaded</h2>
+        <p>Upload a CSV file with network traffic data to begin analysis</p>
+        <div class="upload-zone" id="uploadZone">
+          <i class="fas fa-file-csv"></i>
+          <p>Drag & drop your CSV file here</p>
+          <p class="file-hint">or click to browse files</p>
+          <input type="file" id="mainFileInput" accept=".csv">
+        </div>
+        <div class="sample-data">
+          <p>Don't have a dataset? <a href="#" id="loadSampleBtn">Load sample data</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Content (Hidden initially) -->
+    <div class="dashboard-content" id="dashboardContent" style="display: none;">
+      <!-- Stats Cards -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-database"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Dataset Size</h4>
+            <p class="stat-value" id="datasetSize">0 MB</p>
+            <p class="stat-desc" id="recordCount">0 records</p>
+          </div>
+        </div>
+        
+        <div class="stat-card green">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Normal Traffic</h4>
+            <p class="stat-value" id="normalPercent">0%</p>
+            <p class="stat-desc" id="normalRecords">0 records</p>
+          </div>
+        </div>
+        
+        <div class="stat-card red">
+          <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <h4>DDoS Traffic</h4>
+            <p class="stat-value" id="ddosPercent">0%</p>
+            <p class="stat-desc" id="ddosRecords">0 records</p>
+          </div>
+        </div>
+        
+        <div class="stat-card blue">
+          <div class="stat-icon">
+            <i class="fas fa-brain"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Best Model</h4>
+            <p class="stat-value" id="bestModelAccuracy">0%</p>
+            <p class="stat-desc" id="bestModelName">--</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Left Column - Traffic Distribution -->
+        <section class="card donut-card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-pie"></i> Traffic Distribution</h3>
+            <div class="card-actions">
+              <button class="icon-btn export-chart" data-chart="traffic">
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="trafficChart"></canvas>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <span class="legend-color" style="background-color: #10b981;"></span>
+              <span>Normal Traffic</span>
+              <span class="legend-value" id="normalTrafficValue">0%</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color" style="background-color: #ef4444;"></span>
+              <span>DDoS Traffic</span>
+              <span class="legend-value" id="ddosTrafficValue">0%</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column Top - Model Performance -->
+        <section class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar"></i> Model Performance</h3>
+            <div class="card-actions">
+              <button class="icon-btn export-chart" data-chart="model">
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="modelChart" height="168" style="display: block; box-sizing: border-box; height: 400px; width: 359px;" width="336"></canvas>
+          </div>
+          <div class="model-details">
+            <p><i class="fas fa-info-circle"></i> Higher accuracy indicates better classification performance</p>
+          </div>
+        </section>
+
+        <!-- Right Column Bottom - Confusion Matrix -->
+        <section class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-th"></i> Confusion Matrix</h3>
+            <div class="card-actions">
+              <button class="icon-btn" id="refreshMatrix">
+                <i class="fas fa-redo"></i>
+              </button>
+            </div>
+          </div>
+          <div class="matrix-container">
+            <div class="confusion-matrix">
+              <!-- Column Headers -->
+              <div class="matrix-corner">
+                <i class="fas fa-exchange-alt"></i>
+              </div>
+              <div class="matrix-header pred-header">Predicted<br>Normal</div>
+              <div class="matrix-header pred-header">Predicted<br>DDoS</div>
+              
+              <!-- Row 1 -->
+              <div class="matrix-header actual-header">Actual<br>Normal</div>
+              <div class="matrix-cell true-negative" id="trueNegative">0</div>
+              <div class="matrix-cell false-positive" id="falsePositive">0</div>
+              
+              <!-- Row 2 -->
+              <div class="matrix-header actual-header">Actual<br>DDoS</div>
+              <div class="matrix-cell false-negative" id="falseNegative">0</div>
+              <div class="matrix-cell true-positive" id="truePositive">0</div>
+            </div>
+            
+            <div class="matrix-metrics">
+              <div class="metric">
+                <div class="metric-value" id="accuracyMetric">0%</div>
+                <div class="metric-label">Accuracy</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="precisionMetric">0%</div>
+                <div class="metric-label">Precision</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value" id="recallMetric">0%</div>
+                <div class="metric-label">Recall</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Recommendations Section -->
+      <section class="card recommendations-card">
+        <div class="card-header">
+          <h3><i class="fas fa-lightbulb"></i> Analysis Results & Recommendations</h3>
+          <div class="card-actions">
+            <button class="icon-btn" id="expandRecommendations">
+              <i class="fas fa-expand"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="recommendations-content">
+          <!-- Analysis Summary -->
+          <div class="analysis-summary">
+            <div class="summary-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="summary-content">
+              <h4>Dataset Analysis Summary</h4>
+              <p id="analysisSummaryText">No dataset analyzed yet. Upload and analyze a dataset to see results.</p>
+            </div>
+          </div>
+          
+          <!-- Recommendations Grid -->
+          <div class="recommendations-grid" id="recommendationsGrid">
+            <!-- Recommendations will be populated by JavaScript -->
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="btn action-btn primary" id="exportResultsBtn">
+              <i class="fas fa-file-export"></i> Export Results
+            </button>
+            <button class="btn action-btn secondary" onclick="generateReport()">
+              <i class="fas fa-file-pdf"></i> Generate PDF Report
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
