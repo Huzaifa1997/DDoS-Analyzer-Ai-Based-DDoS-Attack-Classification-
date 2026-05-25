@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% set page_name = "Reports" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="mb-1">Reports &amp; Exports</h2>
+    <p class="text-muted mb-0">Download analysis results in various formats</p>
+  </div>
+</div>
+
+<!-- Export Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="export-card export-pdf" onclick="window.location.href='/export/pdf'" role="button" tabindex="0">
+      <div class="export-icon">
+        <i class="fas fa-file-pdf"></i>
+      </div>
+      <div class="export-info">
+        <h5>PDF Report</h5>
+        <p>Complete analysis report with charts and recommendations</p>
+      </div>
+      <div class="export-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="export-card export-json" onclick="window.location.href='/export/json'" role="button" tabindex="0">
+      <div class="export-icon">
+        <i class="fas fa-file-code"></i>
+      </div>
+      <div class="export-info">
+        <h5>JSON Results</h5>
+        <p>Machine-readable analysis data</p>
+      </div>
+      <div class="export-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="export-card export-csv" id="exportCsvCard" role="button" tabindex="0" style="cursor:pointer;">
+      <div class="export-icon">
+        <i class="fas fa-file-csv"></i>
+      </div>
+      <div class="export-info">
+        <h5>CSV Export</h5>
+        <p>Raw classification results in CSV format</p>
+      </div>
+      <div class="export-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Preview -->
+<div class="cy-card mt-4">
+  <div class="cy-card-header">
+    <span class="cy-card-title"><i class="fas fa-eye me-2"></i>Report Preview</span>
+  </div>
+  <div class="cy-card-body">
+    <div id="reportPreview">
+
+      <!-- Empty state (default) -->
+      <div id="previewEmpty" class="empty-state py-4">
+        <i class="fas fa-file-alt mb-3" style="font-size:48px;color:var(--text-dim);"></i>
+        <h5>No Results Available</h5>
+        <p class="text-muted mb-3">Upload and analyze a dataset to generate a report</p>
+        <a href="/upload" class="btn-cy btn-primary-cy">
+          <i class="fas fa-upload me-2"></i>Upload Dataset
+        </a>
+      </div>
+
+      <!-- Populated preview (hidden until JS loads data) -->
+      <div id="previewData" hidden>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="row g-2" id="metaGrid"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="cy-alert cy-alert-info mb-0" id="summaryAlert">
+              <i class="fas fa-info-circle me-2"></i>
+              <span id="summaryText"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Export History -->
+<div class="cy-card mt-4">
+  <div class="cy-card-header">
+    <span class="cy-card-title"><i class="fas fa-history me-2"></i>Export History</span>
+  </div>
+  <div class="cy-card-body">
+    <div class="cy-table-wrap">
+      <table class="cy-table">
+        <thead>
+          <tr>
+            <th>Report Name</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Records</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">friday_ddos_report_20240517.pdf</td>
+            <td><span class="badge-cy badge-danger">PDF</span></td>
+            <td>2024-05-17 14:32</td>
+            <td class="mono">245,322</td>
+            <td><span class="badge-cy badge-success">Completed</span></td>
+            <td>
+              <button class="btn-cy btn-sm-cy btn-outline-cy">
+                <i class="fas fa-download me-1"></i>Download
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td class="mono">test_traffic_results.json</td>
+            <td><span class="badge-cy badge-warning">JSON</span></td>
+            <td>2024-05-15 09:11</td>
+            <td class="mono">18,450</td>
+            <td><span class="badge-cy badge-success">Completed</span></td>
+            <td>
+              <button class="btn-cy btn-sm-cy btn-outline-cy">
+                <i class="fas fa-download me-1"></i>Download
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td class="mono">network_analysis_export.csv</td>
+            <td><span class="badge-cy badge-success">CSV</span></td>
+            <td>2024-05-12 16:48</td>
+            <td class="mono">98,100</td>
+            <td><span class="badge-cy badge-success">Completed</span></td>
+            <td>
+              <button class="btn-cy btn-sm-cy btn-outline-cy">
+                <i class="fas fa-download me-1"></i>Download
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td class="mono">monday_capture_report.pdf</td>
+            <td><span class="badge-cy badge-danger">PDF</span></td>
+            <td>2024-05-09 11:05</td>
+            <td class="mono">52,780</td>
+            <td><span class="badge-cy badge-success">Completed</span></td>
+            <td>
+              <button class="btn-cy btn-sm-cy btn-outline-cy">
+                <i class="fas fa-download me-1"></i>Download
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Report Information -->
+<div class="cy-card mt-4">
+  <div class="cy-card-header">
+    <span class="cy-card-title"><i class="fas fa-info-circle me-2"></i>Report Information</span>
+  </div>
+  <div class="cy-card-body">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <div class="rec-card danger">
+          <div class="rec-icon"><i class="fas fa-file-pdf"></i></div>
+          <div class="rec-content">
+            <strong>PDF Report</strong>
+            <p class="mb-0">Formatted report with executive summary, confusion matrix charts, model metrics, and security recommendations. Ideal for presenting to stakeholders.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="rec-card warning">
+          <div class="rec-icon"><i class="fas fa-file-code"></i></div>
+          <div class="rec-content">
+            <strong>JSON Results</strong>
+            <p class="mb-0">Raw analysis data in structured JSON format. Includes all model metrics, per-record classifications, and feature importance scores for downstream processing.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="rec-card success">
+          <div class="rec-icon"><i class="fas fa-file-csv"></i></div>
+          <div class="rec-content">
+            <strong>CSV Export</strong>
+            <p class="mb-0">Row-level classification results appended to the original dataset. Compatible with Excel, SIEM tools, and other data analysis platforms.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  function fmt(n) {
+    if (n === undefined || n === null) return '--';
+    return Number(n).toLocaleString();
+  }
+  function pct(n) {
+    if (n === undefined || n === null) return '--';
+    return (parseFloat(n) * 100).toFixed(2) + '%';
+  }
+
+  // --- Load preview from sessionStorage ---
+  function loadPreview() {
+    const raw = sessionStorage.getItem('ddos_last_result');
+    if (!raw) return;
+    try {
+      const d = JSON.parse(raw);
+      renderPreview(d);
+    } catch (e) { /* keep empty state */ }
+  }
+
+  function renderPreview(d) {
+    document.getElementById('previewEmpty').style.display = 'none';
+    document.getElementById('previewData').hidden         = false;
+
+    const total    = d.total_records || d.total || 0;
+    const ddos     = d.ddos_count    || d.ddos  || 0;
+    const normal   = d.normal_count  || d.normal || (total - ddos);
+    const bestAcc  = d.best_accuracy || (d.models && d.models[0]?.accuracy) || 0;
+    const bestModel= d.best_model    || (d.models && d.models[0]?.name) || 'Random Forest';
+    const filename = d.filename || d.file_name || 'dataset.csv';
+    const dateStr  = d.analysis_date || new Date().toLocaleString();
+
+    const meta = [
+      ['Filename',     filename],
+      ['Analysis Date',dateStr],
+      ['Total Records',fmt(total)],
+      ['DDoS Records', fmt(ddos)],
+      ['Normal Records',fmt(normal)],
+      ['Best Model',   bestModel],
+      ['Best Accuracy',pct(bestAcc)],
+      ['Features Used',d.num_features || 76]
+    ];
+
+    const grid = document.getElementById('metaGrid');
+    grid.innerHTML = '';
+    meta.forEach(([k, v]) => {
+      const col = document.createElement('div');
+      col.className = 'col-6';
+      col.innerHTML = `
+        <div class="d-flex flex-column">
+          <small class="text-muted">${k}</small>
+          <span class="mono" style="font-size:13px;">${v}</span>
+        </div>`;
+      grid.appendChild(col);
+    });
+
+    const ddosPct = total > 0 ? ((ddos / total) * 100).toFixed(1) : 0;
+    document.getElementById('summaryText').textContent =
+      `Analysis completed on ${fmt(total)} network flow records. ${fmt(ddos)} records (${ddosPct}%) were classified as DDoS attack traffic and ${fmt(normal)} as normal. The best performing model was ${bestModel} achieving ${pct(bestAcc)} accuracy on the test set.`;
+  }
+
+  // --- CSV Export ---
+  function exportCSV() {
+    const raw = sessionStorage.getItem('ddos_last_result');
+    let csvContent = '';
+    if (raw) {
+      try {
+        const d = JSON.parse(raw);
+        const rows = d.records || [];
+        if (rows.length) {
+          const headers = Object.keys(rows[0]).join(',');
+          const body    = rows.map(r => Object.values(r).join(',')).join('\n');
+          csvContent    = headers + '\n' + body;
+        } else {
+          // Fallback: export summary stats
+          const total  = d.total_records || d.total || 0;
+          const ddos   = d.ddos_count    || d.ddos  || 0;
+          const normal = d.normal_count  || d.normal || (total - ddos);
+          csvContent = 'traffic_type,count,percentage\n';
+          csvContent += `DDoS Attack,${ddos},${total > 0 ? ((ddos/total)*100).toFixed(2) : 0}%\n`;
+          csvContent += `Normal Traffic,${normal},${total > 0 ? ((normal/total)*100).toFixed(2) : 0}%\n`;
+        }
+      } catch (e) {
+        csvContent = 'error,message\nexport_failed,Invalid result data';
+      }
+    } else {
+      csvContent = 'error,message\nno_data,No analysis results found in session';
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'ddos_analysis_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('exportCsvCard').addEventListener('click', exportCSV);
+  document.getElementById('exportCsvCard').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') exportCSV();
+  });
+
+  // Keyboard accessibility for other export cards
+  document.querySelectorAll('.export-card[onclick]').forEach(card => {
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') card.click();
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', loadPreview);
+})();
+</script>
+{% endblock %}
