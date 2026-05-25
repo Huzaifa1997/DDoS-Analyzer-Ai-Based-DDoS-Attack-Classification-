@@ -1,0 +1,45 @@
+{
+  "best_model": "Random Forest",
+  "classes": [
+    "BENIGN",
+    "DDoS"
+  ],
+  "feature_count": 80,
+  "sample_size": 300000,
+  "results": [
+    {
+      "name": "Random Forest",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "confusion_matrix": [
+        [
+          19543,
+          0
+        ],
+        [
+          2,
+          25604
+        ]
+      ]
+    },
+    {
+      "name": "Logistic Regression",
+      "accuracy": 0.9988,
+      "precision": 0.9988,
+      "recall": 0.9988,
+      "f1_score": 0.9988,
+      "confusion_matrix": [
+        [
+          19510,
+          33
+        ],
+        [
+          20,
+          25586
+        ]
+      ]
+    }
+  ]
+}
