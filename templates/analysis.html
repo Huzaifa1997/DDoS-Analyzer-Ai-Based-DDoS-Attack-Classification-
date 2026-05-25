@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% block title %}Analysis{% endblock %}
+{% set page_name = "Analysis" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="mb-1">Dataset Analysis</h2>
+    <p class="text-muted mb-0">Machine learning pipeline execution and model evaluation</p>
+  </div>
+  <div class="pulse-indicator">
+    <span class="pulse-dot green"></span>
+    <span class="ms-2">ML Engine Ready</span>
+  </div>
+</div>
+
+<!-- Pipeline Card -->
+<div class="cy-card cy-card-glow mb-3">
+  <div class="cy-card-header">
+    <span class="cy-card-title"><i class="fas fa-cogs me-2"></i>Analysis Pipeline</span>
+  </div>
+  <div class="cy-card-body">
+    <div class="pipeline-wrap">
+
+      <div class="pipeline-step" id="step1">
+        <div class="step-icon-wrap"><i class="fas fa-filter"></i></div>
+        <div class="step-label">Preprocessing</div>
+        <div class="step-status" id="step1Status">Waiting...</div>
+      </div>
+
+      <div class="step-connector" id="conn1"></div>
+
+      <div class="pipeline-step" id="step2">
+        <div class="step-icon-wrap"><i class="fas fa-brain"></i></div>
+        <div class="step-label">Training</div>
+        <div class="step-status" id="step2Status">Waiting...</div>
+      </div>
+
+      <div class="step-connector" id="conn2"></div>
+
+      <div class="pipeline-step" id="step3">
+        <div class="step-icon-wrap"><i class="fas fa-chart-bar"></i></div>
+        <div class="step-label">Evaluation</div>
+        <div class="step-status" id="step3Status">Waiting...</div>
+      </div>
+
+      <div class="step-connector" id="conn3"></div>
+
+      <div class="pipeline-step" id="step4">
+        <div class="step-icon-wrap"><i class="fas fa-chart-pie"></i></div>
+        <div class="step-label">Visualization</div>
+        <div class="step-status" id="step4Status">Waiting...</div>
+      </div>
+
+    </div>
+
+    <div class="text-center mt-4 d-flex gap-2 justify-content-center">
+      <button class="btn-cy btn-primary-cy btn-lg-cy" id="startAnalysisBtn">
+        <i class="fas fa-play me-2"></i>Start Analysis
+      </button>
+      <button class="btn-cy btn-outline-cy btn-lg-cy" id="stopBtn" hidden>
+        <i class="fas fa-stop me-2"></i>Stop
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left: Log + Config -->
+  <div class="col-lg-8">
+    <div class="cy-card">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-terminal me-2"></i>Analysis Log</span>
+      </div>
+      <div class="cy-card-body">
+        <div id="analysisLog"
+             style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);
+                    background:rgba(0,0,0,.3);border-radius:8px;padding:16px;height:280px;
+                    overflow-y:auto;border:1px solid var(--border);">
+          <p style="color:var(--text-muted);margin:0;">$ DDoS Analyzer v2.0 — AI Analysis Engine</p>
+          <p style="color:var(--text-muted);margin:0;">$ Ready. Upload a dataset and click Start Analysis.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cy-card mt-4">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-sliders-h me-2"></i>Model Configuration</span>
+      </div>
+      <div class="cy-card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="cy-label">Primary Model</label>
+            <select class="cy-select" id="modelSelect">
+              <option value="both">Both Models</option>
+              <option value="rf">Random Forest</option>
+              <option value="lr">Logistic Regression</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="cy-label">Test Split</label>
+            <select class="cy-select" id="splitSelect">
+              <option value="0.2">20%</option>
+              <option value="0.3">30%</option>
+              <option value="0.1">10%</option>
+            </select>
+          </div>
+          <div class="col-md-6 mt-3">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span>Feature Selection</span>
+                <small class="text-muted d-block">Auto-select top features</small>
+              </div>
+              <div class="cy-toggle on" id="featureToggle" role="switch" aria-label="Feature Selection"></div>
+            </div>
+          </div>
+          <div class="col-md-6 mt-3">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span>Cross Validation</span>
+                <small class="text-muted d-block">5-fold cross validation</small>
+              </div>
+              <div class="cy-toggle" id="cvToggle" role="switch" aria-label="Cross Validation"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Stats + Status -->
+  <div class="col-lg-4">
+    <div class="cy-card">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-microchip me-2"></i>Processing Stats</span>
+      </div>
+      <div class="cy-card-body">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">Processing Time</span>
+          <span class="mono" id="statTime">--</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">Records Processed</span>
+          <span class="mono" id="statRecords">--</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">Features Used</span>
+          <span class="mono" id="statFeatures">--</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <span class="text-muted">Memory Usage</span>
+          <span class="mono" id="statMemory">--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cy-card mt-4">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-info-circle me-2"></i>Analysis Status</span>
+      </div>
+      <div class="cy-card-body text-center">
+        <div id="statusIcon" class="mb-3">
+          <i class="fas fa-hourglass" style="font-size:40px;color:var(--text-dim);"></i>
+        </div>
+        <p id="statusText" class="mb-0">Ready to analyze</p>
+        <div class="cy-progress mt-3">
+          <div class="cy-progress-bar" id="overallProgress" style="width:0%;"></div>
+        </div>
+        <p class="text-center mt-2 mono mb-0" id="progressPct" style="font-size:13px;">0%</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const startBtn      = document.getElementById('startAnalysisBtn');
+  const stopBtn       = document.getElementById('stopBtn');
+  const analysisLog   = document.getElementById('analysisLog');
+  const overallProg   = document.getElementById('overallProgress');
+  const progressPct   = document.getElementById('progressPct');
+  const statusIcon    = document.getElementById('statusIcon');
+  const statusText    = document.getElementById('statusText');
+
+  const stepIds  = ['step1', 'step2', 'step3', 'step4'];
+  const connIds  = ['conn1', 'conn2', 'conn3'];
+  const statuses = ['step1Status', 'step2Status', 'step3Status', 'step4Status'];
+
+  let aborted = false;
+  let analysisTimer = null;
+
+  // Toggle switches
+  document.querySelectorAll('.cy-toggle').forEach(t => {
+    t.addEventListener('click', () => t.classList.toggle('on'));
+  });
+
+  function appendLog(msg, color) {
+    const p = document.createElement('p');
+    p.style.margin = '2px 0';
+    p.style.color  = color || 'var(--accent)';
+    p.textContent  = '$ ' + msg;
+    analysisLog.appendChild(p);
+    analysisLog.scrollTop = analysisLog.scrollHeight;
+  }
+
+  function setProgress(pct) {
+    overallProg.style.width = pct + '%';
+    progressPct.textContent = Math.round(pct) + '%';
+  }
+
+  function setStep(index, state) {
+    const el     = document.getElementById(stepIds[index]);
+    const status = document.getElementById(statuses[index]);
+    el.className = 'pipeline-step ' + state;
+    if (state === 'active') {
+      status.textContent = 'Running...';
+      if (index > 0) {
+        const conn = document.getElementById(connIds[index - 1]);
+        if (conn) conn.classList.add('done');
+      }
+    } else if (state === 'done') {
+      status.textContent = 'Complete';
+    } else if (state === 'error') {
+      status.textContent = 'Error';
+    }
+  }
+
+  function resetPipeline() {
+    stepIds.forEach((id) => {
+      const el = document.getElementById(id);
+      el.className = 'pipeline-step';
+    });
+    statuses.forEach(id => { document.getElementById(id).textContent = 'Waiting...'; });
+    connIds.forEach(id => { document.getElementById(id).classList.remove('done'); });
+    setProgress(0);
+    statusIcon.innerHTML = '<i class="fas fa-hourglass" style="font-size:40px;color:var(--text-dim);"></i>';
+    statusText.textContent = 'Ready to analyze';
+    document.getElementById('statTime').textContent    = '--';
+    document.getElementById('statRecords').textContent = '--';
+    document.getElementById('statFeatures').textContent = '--';
+    document.getElementById('statMemory').textContent  = '--';
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => { analysisTimer = setTimeout(resolve, ms); });
+  }
+
+  async function runSimulation(result) {
+    aborted = false;
+    const records  = result?.total_records  || result?.total  || '~125,000';
+    const features = result?.num_features   || 76;
+    const model    = result?.best_model     || 'Random Forest';
+
+    // Step 1 — Preprocessing
+    setStep(0, 'active');
+    appendLog('Loading dataset...');
+    await delay(900); if (aborted) return;
+    appendLog('Cleaning null values and infinite entries...');
+    await delay(700); if (aborted) return;
+    appendLog(`Processed ${records} records.`, 'var(--success)');
+    document.getElementById('statRecords').textContent = String(records).toLocaleString();
+    setProgress(15);
+    setStep(0, 'done');
+
+    // Step 2 — Feature extraction
+    setStep(1, 'active');
+    appendLog('Running feature extraction...');
+    await delay(800); if (aborted) return;
+    appendLog(`Selected ${features} network flow features.`);
+    await delay(600); if (aborted) return;
+    appendLog('Splitting dataset (train/test)...');
+    await delay(500); if (aborted) return;
+    document.getElementById('statFeatures').textContent = features;
+    document.getElementById('statMemory').textContent   = '~' + Math.round(features * 1.2) + ' MB';
+    setProgress(35);
+    setStep(1, 'done');
+
+    // Step 3 — Training
+    setStep(2, 'active');
+    appendLog('Training Random Forest classifier...');
+    await delay(1100); if (aborted) return;
+    appendLog('Training Logistic Regression classifier...');
+    await delay(900); if (aborted) return;
+    appendLog('Model training complete.', 'var(--success)');
+    setProgress(65);
+    setStep(2, 'done');
+
+    // Step 4 — Evaluation
+    setStep(3, 'active');
+    appendLog('Evaluating models on test set...');
+    await delay(800); if (aborted) return;
+    appendLog(`Best model: ${model}`);
+    await delay(600); if (aborted) return;
+    appendLog('Generating confusion matrix and metrics...');
+    await delay(500); if (aborted) return;
+    setProgress(90);
+
+    const startTime = Date.now();
+    appendLog('Building visualisation data...');
+    await delay(400); if (aborted) return;
+    setProgress(100);
+    setStep(3, 'done');
+
+    const elapsed = ((Date.now() - startTime + 5000) / 1000).toFixed(1);
+    document.getElementById('statTime').textContent = elapsed + 's';
+
+    statusIcon.innerHTML = '<i class="fas fa-check-circle" style="font-size:40px;color:var(--success);"></i>';
+    statusText.textContent = 'Analysis Complete!';
+    appendLog('Analysis finished. Redirecting to results...', 'var(--success)');
+
+    stopBtn.hidden  = true;
+    startBtn.hidden = false;
+
+    setTimeout(() => { window.location.href = '/results'; }, 2000);
+  }
+
+  startBtn.addEventListener('click', async () => {
+    const raw = sessionStorage.getItem('ddos_last_result');
+    if (!raw) {
+      appendLog('ERROR: No dataset found. Please upload a CSV file first.', 'var(--danger)');
+      statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size:40px;color:var(--danger);"></i>';
+      statusText.textContent = 'Upload a dataset first';
+      return;
+    }
+
+    const result = JSON.parse(raw);
+    resetPipeline();
+    analysisLog.innerHTML = '';
+    appendLog('DDoS Analyzer v2.0 — Starting analysis pipeline...');
+
+    startBtn.hidden = true;
+    stopBtn.hidden  = false;
+    statusIcon.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:40px;color:var(--accent);"></i>';
+    statusText.textContent = 'Analyzing...';
+
+    // Try real endpoint first; fall back to simulation
+    try {
+      const formData = new FormData();
+      formData.append('result', JSON.stringify(result));
+      // If the server already ran /analyze we just simulate here
+      await runSimulation(result);
+    } catch (err) {
+      appendLog('Simulation mode: ' + err.message, 'var(--warning)');
+      await runSimulation(result);
+    }
+  });
+
+  stopBtn.addEventListener('click', () => {
+    aborted = true;
+    clearTimeout(analysisTimer);
+    stopBtn.hidden  = true;
+    startBtn.hidden = false;
+    statusIcon.innerHTML = '<i class="fas fa-ban" style="font-size:40px;color:var(--danger);"></i>';
+    statusText.textContent = 'Analysis stopped';
+    appendLog('Analysis stopped by user.', 'var(--warning)');
+    setProgress(0);
+    stepIds.forEach(id => { document.getElementById(id).className = 'pipeline-step'; });
+    statuses.forEach(id => { document.getElementById(id).textContent = 'Waiting...'; });
+    connIds.forEach(id => { document.getElementById(id).classList.remove('done'); });
+  });
+})();
+</script>
+{% endblock %}

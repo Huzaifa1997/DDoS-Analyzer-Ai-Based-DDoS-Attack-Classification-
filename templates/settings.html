@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% set page_name = "Settings" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="mb-1">Settings</h2>
+    <p class="text-muted mb-0">Configure dashboard preferences and display options</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left Column -->
+  <div class="col-lg-6">
+
+    <!-- Appearance -->
+    <div class="cy-card">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-palette me-2"></i>Appearance</span>
+      </div>
+      <div class="cy-card-body">
+        <label class="cy-label mb-3">Dashboard Theme</label>
+        <div class="d-flex gap-3 flex-wrap">
+
+          <div class="theme-option" id="themeDark">
+            <div class="theme-swatch dark-swatch"></div>
+            <div>
+              <div class="theme-label">Dark Mode</div>
+              <div class="theme-sublabel">Professional SOC look</div>
+            </div>
+            <i class="fas fa-check theme-check ms-auto"></i>
+          </div>
+
+          <div class="theme-option" id="themeLight">
+            <div class="theme-swatch light-swatch"></div>
+            <div>
+              <div class="theme-label">Light Mode</div>
+              <div class="theme-sublabel">Clean daylight view</div>
+            </div>
+            <i class="fas fa-check theme-check ms-auto"></i>
+          </div>
+
+          <div class="theme-option" id="themeBlue">
+            <div class="theme-swatch blue-swatch"></div>
+            <div>
+              <div class="theme-label">Cyber Blue</div>
+              <div class="theme-sublabel">Enhanced blue tones</div>
+            </div>
+            <i class="fas fa-check theme-check ms-auto"></i>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="cy-card mt-4">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-chart-bar me-2"></i>Visualization</span>
+      </div>
+      <div class="cy-card-body">
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Show Chart Labels</span>
+            <small class="text-muted d-block">Display percentage labels on charts</small>
+          </div>
+          <div class="cy-toggle on" id="toggleLabels" data-setting="toggleLabels" role="switch" aria-label="Show Chart Labels"></div>
+        </div>
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Animate Charts</span>
+            <small class="text-muted d-block">Enable chart render animations</small>
+          </div>
+          <div class="cy-toggle on" id="toggleAnimate" data-setting="toggleAnimate" role="switch" aria-label="Animate Charts"></div>
+        </div>
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Dark Chart Background</span>
+            <small class="text-muted d-block">Use dark backgrounds for all charts</small>
+          </div>
+          <div class="cy-toggle on" id="toggleDarkCharts" data-setting="toggleDarkCharts" role="switch" aria-label="Dark Chart Background"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span>Show Grid Lines</span>
+            <small class="text-muted d-block">Display grid lines on bar charts</small>
+          </div>
+          <div class="cy-toggle" id="toggleGrid" data-setting="toggleGrid" role="switch" aria-label="Show Grid Lines"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right Column -->
+  <div class="col-lg-6">
+
+    <!-- Dashboard Preferences -->
+    <div class="cy-card">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-cog me-2"></i>Dashboard Preferences</span>
+      </div>
+      <div class="cy-card-body">
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Auto-refresh</span>
+            <small class="text-muted d-block">Automatically refresh dashboard stats</small>
+          </div>
+          <div class="cy-toggle" id="toggleAutoRefresh" data-setting="toggleAutoRefresh" role="switch" aria-label="Auto-refresh"></div>
+        </div>
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Notification Sounds</span>
+            <small class="text-muted d-block">Play sounds for alerts</small>
+          </div>
+          <div class="cy-toggle" id="toggleSounds" data-setting="toggleSounds" role="switch" aria-label="Notification Sounds"></div>
+        </div>
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Compact Mode</span>
+            <small class="text-muted d-block">Reduce spacing for more content</small>
+          </div>
+          <div class="cy-toggle" id="toggleCompact" data-setting="toggleCompact" role="switch" aria-label="Compact Mode"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span>Activity Logging</span>
+            <small class="text-muted d-block">Log user actions locally</small>
+          </div>
+          <div class="cy-toggle on" id="toggleLog" data-setting="toggleLog" role="switch" aria-label="Activity Logging"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div class="cy-card mt-4">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-shield-alt me-2"></i>Security</span>
+      </div>
+      <div class="cy-card-body">
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Session Timeout</span>
+            <small class="text-muted d-block">Auto-logout after inactivity</small>
+          </div>
+          <select class="cy-select" id="sessionTimeout" data-setting="sessionTimeout" style="max-width:130px;">
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </div>
+
+        <div class="setting-row border-bottom pb-3 mb-3">
+          <div class="setting-info">
+            <span>Upload Validation</span>
+            <small class="text-muted d-block">Strict file validation on upload</small>
+          </div>
+          <div class="cy-toggle on" id="toggleValidation" data-setting="toggleValidation" role="switch" aria-label="Upload Validation"></div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span>Secure Mode</span>
+            <small class="text-muted d-block">Hide sensitive data in displays</small>
+          </div>
+          <div class="cy-toggle" id="toggleSecure" data-setting="toggleSecure" role="switch" aria-label="Secure Mode"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- System Information -->
+<div class="cy-card mt-4">
+  <div class="cy-card-header">
+    <span class="cy-card-title"><i class="fas fa-server me-2"></i>System Information</span>
+  </div>
+  <div class="cy-card-body">
+    <div class="row g-2">
+      <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">App Version</span>
+          <span class="badge-cy badge-primary mono">v2.0</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">Python</span>
+          <span class="mono">3.13</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <span class="text-muted">Flask Framework</span>
+          <span class="mono">Flask 3.x</span>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">ML Engine</span>
+          <span class="mono">scikit-learn 1.8</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted">Models Trained</span>
+          <span class="mono">2</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <span class="text-muted">Dataset Format</span>
+          <span class="mono">CICFlowMeter</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Danger Zone -->
+<div class="cy-card mt-4" style="border-color:var(--danger);">
+  <div class="cy-card-header">
+    <span class="cy-card-title" style="color:var(--danger);">
+      <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+    </span>
+  </div>
+  <div class="cy-card-body">
+
+    <div class="setting-row border-bottom pb-3 mb-3">
+      <div class="setting-info">
+        <span>Clear Analysis Results</span>
+        <small class="text-muted d-block">Remove stored results from browser</small>
+      </div>
+      <button class="btn-cy btn-sm-cy btn-outline-cy" id="clearResults">
+        <i class="fas fa-trash me-1"></i>Clear
+      </button>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <span>Reset All Settings</span>
+        <small class="text-muted d-block">Restore defaults</small>
+      </div>
+      <button class="btn-cy btn-sm-cy btn-danger-cy" id="resetAll">
+        <i class="fas fa-undo me-1"></i>Reset
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  // ---- Toast ----
+  function showToast(msg, type) {
+    type = type || 'success';
+    const map = { success: 'cy-alert-success', danger: 'cy-alert-danger', warning: 'cy-alert-warning', info: 'cy-alert-info' };
+    const iconMap = { success: 'fa-check-circle', danger: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+    const div = document.createElement('div');
+    div.className = 'cy-alert ' + (map[type] || 'cy-alert-success');
+    div.style.cssText = 'min-width:260px;margin-top:8px;opacity:0;transition:opacity .3s;';
+    div.innerHTML = `<i class="fas ${iconMap[type]} me-2"></i>${msg}`;
+    document.getElementById('toastContainer').appendChild(div);
+    requestAnimationFrame(() => { div.style.opacity = '1'; });
+    setTimeout(() => {
+      div.style.opacity = '0';
+      setTimeout(() => div.remove(), 350);
+    }, 3000);
+  }
+
+  // ---- Default toggle states ----
+  const DEFAULTS = {
+    toggleLabels:      'on',
+    toggleAnimate:     'on',
+    toggleDarkCharts:  'on',
+    toggleGrid:        'off',
+    toggleAutoRefresh: 'off',
+    toggleSounds:      'off',
+    toggleCompact:     'off',
+    toggleLog:         'on',
+    toggleValidation:  'on',
+    toggleSecure:      'off',
+    sessionTimeout:    '30',
+    theme:             'dark'
+  };
+
+  // ---- Load settings from localStorage ----
+  function loadSettings() {
+    // Theme
+    const savedTheme = localStorage.getItem('cy_theme') || DEFAULTS.theme;
+    applyTheme(savedTheme, false);
+
+    // Toggles
+    document.querySelectorAll('.cy-toggle[data-setting]').forEach(toggle => {
+      const key = toggle.dataset.setting;
+      const val = localStorage.getItem('cy_' + key);
+      if (val === null) return; // keep HTML default
+      if (val === 'on')  toggle.classList.add('on');
+      else               toggle.classList.remove('on');
+    });
+
+    // Session timeout select
+    const savedTimeout = localStorage.getItem('cy_sessionTimeout') || DEFAULTS.sessionTimeout;
+    const sel = document.getElementById('sessionTimeout');
+    if (sel) sel.value = savedTimeout;
+  }
+
+  // ---- Theme switching ----
+  const themeIds  = ['themeDark', 'themeLight', 'themeBlue'];
+  const themeKeys = { themeDark: 'dark', themeLight: 'light', themeBlue: 'blue' };
+
+  function applyTheme(key, save) {
+    themeIds.forEach(id => document.getElementById(id).classList.remove('selected'));
+    const targetId = Object.keys(themeKeys).find(k => themeKeys[k] === key) || 'themeDark';
+    document.getElementById(targetId).classList.add('selected');
+    // Remove existing theme classes and apply new one
+    document.body.classList.remove('theme-dark', 'theme-light', 'theme-blue');
+    document.body.classList.add('theme-' + key);
+    if (save !== false) {
+      localStorage.setItem('cy_theme', key);
+      showToast('Theme changed to ' + key.charAt(0).toUpperCase() + key.slice(1) + ' Mode', 'success');
+    }
+  }
+
+  themeIds.forEach(id => {
+    document.getElementById(id).addEventListener('click', () => {
+      applyTheme(themeKeys[id]);
+    });
+  });
+
+  // ---- Toggle switches ----
+  document.querySelectorAll('.cy-toggle[data-setting]').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      toggle.classList.toggle('on');
+      const key = toggle.dataset.setting;
+      const val = toggle.classList.contains('on') ? 'on' : 'off';
+      localStorage.setItem('cy_' + key, val);
+    });
+  });
+
+  // ---- Session timeout select ----
+  const sessionSel = document.getElementById('sessionTimeout');
+  if (sessionSel) {
+    sessionSel.addEventListener('change', () => {
+      localStorage.setItem('cy_sessionTimeout', sessionSel.value);
+      showToast('Session timeout set to ' + sessionSel.value + ' minutes', 'info');
+    });
+  }
+
+  // ---- Clear Results ----
+  document.getElementById('clearResults').addEventListener('click', () => {
+    sessionStorage.removeItem('ddos_last_result');
+    showToast('Analysis results cleared from browser storage.', 'success');
+  });
+
+  // ---- Reset All ----
+  document.getElementById('resetAll').addEventListener('click', () => {
+    // Remove all cy_ prefixed keys
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('cy_')) keysToRemove.push(k);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    showToast('Settings reset to defaults. Reloading...', 'warning');
+    setTimeout(() => { window.location.reload(); }, 1500);
+  });
+
+  // ---- Init ----
+  document.addEventListener('DOMContentLoaded', loadSettings);
+})();
+</script>
+{% endblock %}

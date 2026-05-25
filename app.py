@@ -8,9 +8,11 @@ import os
 import json
 import uuid
 import pandas as pd
+from functools import wraps
 from flask import (
     Flask, render_template, request, jsonify,
-    send_file, send_from_directory, abort
+    send_file, send_from_directory, abort,
+    session, redirect, url_for
 )
 from werkzeug.utils import secure_filename
 
@@ -21,7 +23,7 @@ from modules.report import generate_pdf
 # ── app setup ────────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = "ddos-analyzer-secret-2024"
 app.config["UPLOAD_FOLDER"] = "uploads"
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024   # 500 MB
 
@@ -32,19 +34,102 @@ os.makedirs("uploads", exist_ok=True)
 # in-memory session store (one result per process — fine for single-user offline tool)
 _last_result: dict = {}
 
+# Demo credentials (single-user offline tool)
+DEMO_USER = {"username": "admin", "password": "ddos@admin"}
+
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
 
-# ── routes ───────────────────────────────────────────────────────────────────
+# ── Auth decorator ────────────────────────────────────────────────────────────
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login_page"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ── Auth routes ───────────────────────────────────────────────────────────────
+
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        if username == DEMO_USER["username"] and password == DEMO_USER["password"]:
+            session["logged_in"] = True
+            session["username"]  = username
+            return redirect(url_for("dashboard"))
+        error = "Invalid username or password."
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login_page"))
+
+
+# ── Page routes ───────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return redirect(url_for("dashboard"))
 
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
+
+
+@app.route("/upload")
+@login_required
+def upload_page():
+    return render_template("upload.html")
+
+
+@app.route("/analysis")
+@login_required
+def analysis_page():
+    return render_template("analysis.html")
+
+
+@app.route("/results")
+@login_required
+def results_page():
+    return render_template("results.html")
+
+
+@app.route("/reports")
+@login_required
+def reports_page():
+    return render_template("reports.html")
+
+
+@app.route("/settings")
+@login_required
+def settings_page():
+    return render_template("settings.html")
+
+
+@app.route("/keep-alive", methods=["POST"])
+@login_required
+def keep_alive():
+    # Reset server-side session lifetime by touching the session
+    session.modified = True
+    return jsonify({"ok": True})
+
+
+# ── API routes ────────────────────────────────────────────────────────────────
 
 @app.route("/analyze", methods=["POST"])
+@login_required
 def analyze():
     if "file" not in request.files:
         return jsonify({"success": False, "error": "No file uploaded."}), 400
@@ -104,6 +189,7 @@ def analyze():
 
 
 @app.route("/export/json")
+@login_required
 def export_json():
     if not _last_result:
         abort(404)
@@ -117,6 +203,7 @@ def export_json():
 
 
 @app.route("/export/pdf")
+@login_required
 def export_pdf():
     if not _last_result:
         abort(404)
@@ -130,6 +217,7 @@ def export_pdf():
 
 
 @app.route("/chart/<name>")
+@login_required
 def serve_chart(name):
     allowed = {
         "cm_random_forest", "cm_logistic_regression",
@@ -141,6 +229,7 @@ def serve_chart(name):
 
 
 @app.route("/models/meta")
+@login_required
 def model_meta():
     try:
         with open(os.path.join("models", "training_meta.json")) as f:

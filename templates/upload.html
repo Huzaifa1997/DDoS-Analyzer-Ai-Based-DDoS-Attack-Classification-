@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+{% block title %}Upload Dataset{% endblock %}
+{% set page_name = "Upload Dataset" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="mb-1">Upload Dataset</h2>
+    <p class="text-muted mb-0">Upload CICFlowMeter CSV files for batch analysis</p>
+  </div>
+  <div>
+    <a href="/history" class="btn-cy btn-outline-cy">
+      <i class="fas fa-history me-2"></i>View History
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left Column -->
+  <div class="col-lg-8">
+    <div class="cy-card">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-cloud-upload-alt me-2"></i>Dataset Upload</span>
+      </div>
+      <div class="cy-card-body">
+
+        <!-- Alerts -->
+        <div class="cy-alert cy-alert-info d-none mb-3" id="uploadSuccess">
+          <i class="fas fa-check-circle me-2"></i>
+          <span id="uploadSuccessMsg">File uploaded and analysis started successfully.</span>
+        </div>
+        <div class="cy-alert cy-alert-danger d-none mb-3" id="uploadError">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          <span id="uploadErrorMsg">An error occurred during upload. Please try again.</span>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="upload-dropzone" id="dropzone">
+          <i class="fas fa-cloud-upload-alt drop-icon"></i>
+          <h4>Drop your CSV file here</h4>
+          <p class="text-muted">or click to browse files</p>
+          <div class="d-flex gap-2 justify-content-center mt-2">
+            <span class="file-type-pill">.CSV</span>
+            <span class="file-type-pill">.TXT</span>
+          </div>
+          <input type="file" id="fileInput" accept=".csv" hidden>
+        </div>
+
+        <!-- File Details -->
+        <div id="fileDetails" class="mt-3" hidden>
+          <div class="upload-file-card">
+            <div class="file-icon-wrap">
+              <i class="fas fa-file-csv"></i>
+            </div>
+            <div class="flex-grow-1">
+              <p class="file-name mb-0" id="fileName">filename.csv</p>
+              <p class="file-meta mb-0" id="fileMeta">0 KB &bull; CSV</p>
+            </div>
+            <button class="btn-cy btn-icon-cy" id="removeFileBtn" title="Remove file">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div id="uploadProgress" class="mt-3" hidden>
+          <div class="cy-progress">
+            <div class="cy-progress-bar" id="progressBar" style="width: 0%;"></div>
+          </div>
+          <p class="mono mt-2 mb-0" id="progressText" style="font-size:12px;color:var(--text-muted);">Preparing upload...</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn-cy btn-primary-cy" id="uploadBtn" disabled>
+            <i class="fas fa-rocket me-2"></i>Start Analysis
+          </button>
+          <button class="btn-cy btn-outline-cy" id="clearBtn" disabled>
+            <i class="fas fa-redo me-2"></i>Clear
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dataset Preview -->
+    <div class="cy-card mt-4">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-table me-2"></i>Dataset Preview</span>
+      </div>
+      <div class="cy-card-body">
+        <div id="previewEmpty" class="empty-state">
+          <i class="fas fa-table mb-3" style="font-size:40px;color:var(--text-dim);"></i>
+          <h5>No file selected</h5>
+          <p class="text-muted mb-0">Upload a CSV file to preview its contents</p>
+        </div>
+        <div id="previewTable" hidden>
+          <div class="cy-table-wrap">
+            <table class="cy-table" id="dataPreview">
+              <thead>
+                <tr>
+                  <th>Flow ID</th>
+                  <th>Src IP</th>
+                  <th>Dst IP</th>
+                  <th>Protocol</th>
+                  <th>Flow Duration</th>
+                  <th>Label</th>
+                </tr>
+              </thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="text-end mono mb-0" id="previewInfo" hidden style="font-size:11px;color:var(--text-muted);"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column -->
+  <div class="col-lg-4">
+    <!-- Upload Guidelines -->
+    <div class="cy-card">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-info-circle me-2"></i>Upload Guidelines</span>
+      </div>
+      <div class="cy-card-body">
+        <div class="rec-card info mb-2">
+          <div class="rec-icon"><i class="fas fa-tools"></i></div>
+          <div class="rec-content">
+            <strong>CICFlowMeter Format</strong>
+            <p class="mb-0">Use CSV files generated by CICFlowMeter tool</p>
+          </div>
+        </div>
+        <div class="rec-card info mb-2">
+          <div class="rec-icon"><i class="fas fa-weight-hanging"></i></div>
+          <div class="rec-content">
+            <strong>File Size Limit</strong>
+            <p class="mb-0">Maximum 500 MB per upload</p>
+          </div>
+        </div>
+        <div class="rec-card info mb-2">
+          <div class="rec-icon"><i class="fas fa-columns"></i></div>
+          <div class="rec-content">
+            <strong>Required Columns</strong>
+            <p class="mb-0">Must contain network flow feature columns</p>
+          </div>
+        </div>
+        <div class="rec-card info mb-2">
+          <div class="rec-icon"><i class="fas fa-tag"></i></div>
+          <div class="rec-content">
+            <strong>Label Column</strong>
+            <p class="mb-0">Optional: Label column for evaluation metrics</p>
+          </div>
+        </div>
+        <div class="rec-card info">
+          <div class="rec-icon"><i class="fas fa-font"></i></div>
+          <div class="rec-content">
+            <strong>Encoding</strong>
+            <p class="mb-0">Files must be UTF-8 encoded</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Validation -->
+    <div class="cy-card mt-3">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-check-double me-2"></i>File Validation</span>
+      </div>
+      <div class="cy-card-body">
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span>File Format</span>
+          <span class="badge-cy badge-warning" id="checkFormat">Pending</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span>File Size</span>
+          <span class="badge-cy badge-warning" id="checkSize">Pending</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span>CSV Structure</span>
+          <span class="badge-cy badge-warning" id="checkStructure">Pending</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span>Feature Columns</span>
+          <span class="badge-cy badge-warning" id="checkFeatures">Pending</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <span>Encoding</span>
+          <span class="badge-cy badge-warning" id="checkEncoding">Pending</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload History -->
+    <div class="cy-card mt-3">
+      <div class="cy-card-header">
+        <span class="cy-card-title"><i class="fas fa-history me-2"></i>Upload History</span>
+      </div>
+      <div class="cy-card-body">
+        <div class="activity-item">
+          <span class="activity-dot success"></span>
+          <div class="flex-grow-1">
+            <p class="activity-text mb-0">Friday-DDoS.csv</p>
+            <p class="activity-time mb-0">245,322 records &bull; 2h ago</p>
+          </div>
+          <span class="badge-cy badge-success">Done</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-dot success"></span>
+          <div class="flex-grow-1">
+            <p class="activity-text mb-0">test_traffic.csv</p>
+            <p class="activity-time mb-0">18,450 records &bull; Yesterday</p>
+          </div>
+          <span class="badge-cy badge-success">Done</span>
+        </div>
+        <div class="activity-item">
+          <span class="activity-dot danger"></span>
+          <div class="flex-grow-1">
+            <p class="activity-text mb-0">network_capture_raw.csv</p>
+            <p class="activity-time mb-0">Invalid format &bull; 3 days ago</p>
+          </div>
+          <span class="badge-cy badge-danger">Failed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const dropzone      = document.getElementById('dropzone');
+  const fileInput     = document.getElementById('fileInput');
+  const fileDetails   = document.getElementById('fileDetails');
+  const fileNameEl    = document.getElementById('fileName');
+  const fileMetaEl    = document.getElementById('fileMeta');
+  const removeFileBtn = document.getElementById('removeFileBtn');
+  const uploadBtn     = document.getElementById('uploadBtn');
+  const clearBtn      = document.getElementById('clearBtn');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const progressBar   = document.getElementById('progressBar');
+  const progressText  = document.getElementById('progressText');
+  const uploadSuccess = document.getElementById('uploadSuccess');
+  const uploadError   = document.getElementById('uploadError');
+  const previewEmpty  = document.getElementById('previewEmpty');
+  const previewTable  = document.getElementById('previewTable');
+  const previewBody   = document.getElementById('previewBody');
+  const previewInfo   = document.getElementById('previewInfo');
+
+  const checks = {
+    checkFormat:    { el: document.getElementById('checkFormat'),    pass: false },
+    checkSize:      { el: document.getElementById('checkSize'),      pass: false },
+    checkStructure: { el: document.getElementById('checkStructure'), pass: false },
+    checkFeatures:  { el: document.getElementById('checkFeatures'),  pass: false },
+    checkEncoding:  { el: document.getElementById('checkEncoding'),  pass: false }
+  };
+
+  let selectedFile = null;
+
+  // --- Drag & Drop ---
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('drag-over');
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('drag-over');
+  });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length) handleFile(files[0]);
+  });
+
+  // --- Click to browse ---
+  dropzone.addEventListener('click', (e) => {
+    if (e.target === removeFileBtn || removeFileBtn.contains(e.target)) return;
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  // --- Remove file ---
+  removeFileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    resetForm();
+  });
+
+  // --- Handle file selection ---
+  function handleFile(file) {
+    selectedFile = file;
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    const sizeKB = (file.size / 1024).toFixed(1);
+    fileNameEl.textContent = file.name;
+    fileMetaEl.textContent = (file.size > 1024 * 1024 ? sizeMB + ' MB' : sizeKB + ' KB') + ' • ' + (file.name.split('.').pop().toUpperCase());
+    fileDetails.hidden = false;
+    uploadBtn.disabled = false;
+    clearBtn.disabled  = false;
+    runValidation(file);
+    previewCSV(file);
+  }
+
+  // --- Validation ---
+  function setBadge(id, pass) {
+    const el = checks[id].el;
+    el.className = 'badge-cy ' + (pass ? 'badge-success' : 'badge-danger');
+    el.textContent = pass ? 'Pass' : 'Fail';
+    checks[id].pass = pass;
+  }
+  function resetBadge(id) {
+    const el = checks[id].el;
+    el.className = 'badge-cy badge-warning';
+    el.textContent = 'Pending';
+  }
+
+  function runValidation(file) {
+    const ext   = file.name.split('.').pop().toLowerCase();
+    const sizeMB = file.size / (1024 * 1024);
+
+    setBadge('checkFormat',   ext === 'csv' || ext === 'txt');
+    setBadge('checkSize',     sizeMB <= 500);
+
+    // Read first chunk to check structure / encoding
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\n').filter(l => l.trim());
+      const header = lines[0] || '';
+      const cols   = header.split(',').length;
+      setBadge('checkStructure', cols >= 3 && lines.length >= 2);
+      // Basic feature heuristic: look for numeric-ish column names
+      const hasFeatures = /duration|bytes|packets|length|flag|protocol|port/i.test(header);
+      setBadge('checkFeatures', hasFeatures || cols >= 10);
+      // Encoding: if FileReader decoded without replacement characters assume UTF-8 ok
+      setBadge('checkEncoding', !text.includes('�'));
+    };
+    reader.readAsText(file.slice(0, 65536)); // read first 64 KB
+  }
+
+  // --- CSV Preview ---
+  function previewCSV(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text  = e.target.result;
+      const lines = text.split('\n').filter(l => l.trim()).slice(0, 11); // header + 10 rows
+      if (lines.length < 2) return;
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const displayed = headers.slice(0, 6);
+
+      // Update thead
+      const thead = document.querySelector('#dataPreview thead tr');
+      thead.innerHTML = displayed.map(h => `<th>${escHtml(h)}</th>`).join('');
+
+      // Fill tbody
+      previewBody.innerHTML = '';
+      lines.slice(1, 11).forEach(line => {
+        const cells = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+        const tr = document.createElement('tr');
+        displayed.forEach((_, i) => {
+          const td = document.createElement('td');
+          td.className = 'mono';
+          td.style.fontSize = '11px';
+          td.textContent = cells[i] !== undefined ? cells[i] : '';
+          tr.appendChild(td);
+        });
+        previewBody.appendChild(tr);
+      });
+
+      previewEmpty.style.display = 'none';
+      previewTable.hidden = false;
+      previewInfo.hidden  = false;
+      previewInfo.textContent = `Showing ${lines.length - 1} of ~${(file.size / (lines[0].length + 1)).toFixed(0)} estimated rows • ${headers.length} columns`;
+    };
+    reader.readAsText(file.slice(0, 65536));
+  }
+
+  // --- Upload ---
+  uploadBtn.addEventListener('click', () => {
+    if (!selectedFile) return;
+    uploadProgress.hidden = false;
+    uploadBtn.disabled    = true;
+    clearBtn.disabled     = true;
+    uploadSuccess.classList.add('d-none');
+    uploadError.classList.add('d-none');
+
+    // Animate progress bar while real fetch runs
+    let pct = 0;
+    const iv = setInterval(() => {
+      if (pct < 85) { pct += Math.random() * 8; setProgress(pct); }
+    }, 200);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    fetch('/analyze', { method: 'POST', body: formData })
+      .then(res => {
+        clearInterval(iv);
+        setProgress(100);
+        if (!res.ok) throw new Error('Server returned ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        sessionStorage.setItem('ddos_last_result', JSON.stringify(data));
+        uploadSuccess.classList.remove('d-none');
+        progressText.textContent = 'Upload complete! Redirecting...';
+        setTimeout(() => { window.location.href = '/results'; }, 1200);
+      })
+      .catch(err => {
+        clearInterval(iv);
+        setProgress(0);
+        uploadProgress.hidden = true;
+        uploadBtn.disabled = false;
+        clearBtn.disabled  = false;
+        uploadError.classList.remove('d-none');
+        document.getElementById('uploadErrorMsg').textContent = err.message || 'Upload failed. Please try again.';
+      });
+  });
+
+  function setProgress(pct) {
+    const p = Math.min(100, Math.max(0, pct));
+    progressBar.style.width = p + '%';
+    progressText.textContent = p < 100 ? 'Uploading... ' + Math.round(p) + '%' : 'Processing complete.';
+  }
+
+  // --- Clear ---
+  clearBtn.addEventListener('click', resetForm);
+
+  function resetForm() {
+    selectedFile = null;
+    fileInput.value = '';
+    fileDetails.hidden    = true;
+    uploadProgress.hidden = true;
+    uploadBtn.disabled    = true;
+    clearBtn.disabled     = true;
+    progressBar.style.width = '0%';
+    uploadSuccess.classList.add('d-none');
+    uploadError.classList.add('d-none');
+    previewEmpty.style.display = '';
+    previewTable.hidden = true;
+    previewInfo.hidden  = true;
+    previewBody.innerHTML = '';
+    Object.keys(checks).forEach(k => resetBadge(k));
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+})();
+</script>
+{% endblock %}
