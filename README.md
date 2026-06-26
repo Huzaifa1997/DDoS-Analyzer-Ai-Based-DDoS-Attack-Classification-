@@ -96,6 +96,8 @@ Everything runs **locally** — your traffic data never leaves your machine (the
 | <img src="assets/screenshots/overview.png" width="420"/> | <img src="assets/screenshots/recommendations.png" width="420"/> |
 | **PDF Report** | **PDF Report — details** |
 | <img src="assets/screenshots/pdf-report.png" width="420"/> | <img src="assets/screenshots/pdf-report-2.png" width="420"/> |
+| **Upload** | **Settings** |
+| <img src="assets/screenshots/upload.png" width="420"/> | <img src="assets/screenshots/settings.png" width="420"/> |
 
 </div>
 
