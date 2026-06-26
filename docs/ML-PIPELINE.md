@@ -58,13 +58,9 @@ CIC-DDoS2019 is ~99.8% attack traffic. DDoS is **undersampled to 9× the BENIGN 
 
 ## Reported metrics
 
-| Model | Accuracy | Precision | Recall | F1 |
-|---|---|---|---|---|
-| **Random Forest** (best) | 99.1% | 99.1% | 99.1% | 99.1% |
-| Logistic Regression | 93.1% | 95.8% | 93.1% | 93.8% |
+Both models are evaluated on a **clean held-out test set** plus 5-fold cross-validation at training time, and **Random Forest is selected as the best model**. The exact figures for the current build live in [`../models/training_meta.json`](../models/training_meta.json) and are shown live in the dashboard / PDF for whatever labeled data you analyze — this document intentionally avoids hard-coding numbers that would drift out of date.
 
-- **5-fold cross-validation:** 98.7% ± 0.41%
-- **Overfit check:** train ≈ test for both (gap < 1 pt) → no overfitting.
+- **Overfit check:** train ≈ test for both models → no overfitting.
 
 ## Why the numbers are realistic (and consistent)
 

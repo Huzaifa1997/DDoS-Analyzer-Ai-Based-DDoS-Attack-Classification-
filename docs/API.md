@@ -25,12 +25,12 @@ Run the full pipeline on an uploaded file.
   "benign_count": 570, "ddos_count": 5640,
   "benign_percent": 9.18, "ddos_percent": 90.82,
   "best_model": "Random Forest",
-  "best_accuracy": 99.1,            // null when the file has no Label column
+  "best_accuracy": 0.0,             // % — computed LIVE on your labeled data (varies); null if no Label column
   "has_ground_truth": true,
   "models": [
-    { "name": "Random Forest", "accuracy": 99.1, "precision": 99.1,
-      "recall": 99.1, "f1_score": 99.1,
-      "confusion_matrix": [[570,51],[4,5585]], "metrics_source": "live" }
+    { "name": "Random Forest", "accuracy": 0.0, "precision": 0.0,
+      "recall": 0.0, "f1_score": 0.0,   // example shape only — real values are live
+      "confusion_matrix": [[0,0],[0,0]], "metrics_source": "live" }
     // ...Logistic Regression
   ],
   "traffic_intel": {
