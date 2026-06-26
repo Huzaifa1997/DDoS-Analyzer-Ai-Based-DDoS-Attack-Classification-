@@ -1,45 +1,82 @@
 {
+  "dataset": "CIC-DDoS2019",
+  "training_date": "2026-06-26 00:47:56",
   "best_model": "Random Forest",
   "classes": [
     "BENIGN",
     "DDoS"
   ],
   "feature_count": 80,
-  "sample_size": 300000,
+  "original_row_count": 1803174,
+  "benign_count": 3105,
+  "ddos_count_after_undersampling": 27945,
+  "train_size": 24840,
+  "test_size": 6210,
+  "cv_mean": 0.986997,
+  "cv_std": 0.004111,
+  "label_noise_rate": 0.08,
+  "feature_noise_sigma": 2.5,
+  "overfit_check": {
+    "Random Forest": {
+      "train_accuracy": 0.9914,
+      "test_accuracy": 0.9911,
+      "gap_pts": 0.03
+    },
+    "Logistic Regression": {
+      "train_accuracy": 0.9365,
+      "test_accuracy": 0.9306,
+      "gap_pts": 0.59
+    }
+  },
+  "dropped_columns": [
+    "Destination IP",
+    "Flow ID",
+    "Inbound",
+    "Label",
+    "SimillarHTTP",
+    "Source IP",
+    "Timestamp",
+    "Unnamed: 0",
+    "Unnamed: 0.1"
+  ],
   "results": [
     {
       "name": "Random Forest",
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
+      "accuracy": 0.9911,
+      "precision": 0.9912,
+      "recall": 0.9911,
+      "f1_score": 0.991,
       "confusion_matrix": [
         [
-          19543,
-          0
+          570,
+          51
         ],
         [
-          2,
-          25604
+          4,
+          5585
         ]
-      ]
+      ],
+      "train_accuracy": 0.9914,
+      "test_accuracy": 0.9911
     },
     {
       "name": "Logistic Regression",
-      "accuracy": 0.9988,
-      "precision": 0.9988,
-      "recall": 0.9988,
-      "f1_score": 0.9988,
+      "accuracy": 0.9306,
+      "precision": 0.9581,
+      "recall": 0.9306,
+      "f1_score": 0.938,
       "confusion_matrix": [
         [
-          19510,
-          33
+          615,
+          6
         ],
         [
-          20,
-          25586
+          425,
+          5164
         ]
-      ]
+      ],
+      "train_accuracy": 0.9365,
+      "test_accuracy": 0.9306
     }
   ]
 }

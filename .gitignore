@@ -2,6 +2,12 @@
 *.csv
 *.pcap
 *.pcapng
+*.parquet
+*.zip
+ddos 2019 dataset/
+
+# Throwaway diagnostic charts (regenerate via scratchpad scripts)
+diagnostics/
 
 # Python cache
 __pycache__/
@@ -29,6 +35,7 @@ Thumbs.db
 # Secrets / env
 .env
 *.env
+config.json
 
 # Jupyter
 .ipynb_checkpoints/
