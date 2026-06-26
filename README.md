@@ -19,7 +19,7 @@
 ![Status](https://img.shields.io/badge/status-active-success?style=flat-square)
 ![Dataset](https://img.shields.io/badge/dataset-CIC--DDoS2019-blue?style=flat-square)
 ![Models](https://img.shields.io/badge/models-Random%20Forest%20%2B%20Logistic%20Regression-orange?style=flat-square)
-![Best Accuracy](https://img.shields.io/badge/best%20accuracy-99.1%25-brightgreen?style=flat-square)
+![Classification](https://img.shields.io/badge/classification-BENIGN%20vs%20DDoS-brightgreen?style=flat-square)
 ![Privacy](https://img.shields.io/badge/runs-100%25%20offline-9cf?style=flat-square)
 
 </div>
@@ -189,22 +189,21 @@ See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the full component map 
 
 ## 📈 Model Performance
 
-Trained on **CIC-DDoS2019** (binary BENIGN vs DDoS, 80 CICFlowMeter features, 9:1 class-balanced, 31,050 rows).
+Two supervised models are trained on **CIC-DDoS2019** (binary BENIGN vs DDoS, 80 CICFlowMeter features, 9:1 class-balanced, 31,050 rows) and compared side by side:
 
-| Model | Accuracy | Precision | Recall | F1 | Role |
-|---|---|---|---|---|---|
-| 🌳 **Random Forest** | **99.1%** | 99.1% | 99.1% | 99.1% | **Best model** |
-| 📉 Logistic Regression | 93.1% | 95.8% | 93.1% | 93.8% | Comparison |
+| Model | Role |
+|---|---|
+| 🌳 **Random Forest** | **Best model** — selected as the primary classifier |
+| 📉 Logistic Regression | Baseline for comparison |
 
-- **5-fold CV:** 98.7% ± 0.41% · **No overfitting** (train ≈ test).
-- Metrics are computed on a clean held-out test set; the dashboard recomputes them live on any labeled file you upload.
+Performance is **measured live on whatever labeled data you upload** and rendered in the dashboard (metric cards, model-comparison chart, confusion matrix) and the PDF report — so the figures always reflect *your* data rather than a static claim. Cross-validation runs at training time and is recorded in [`models/training_meta.json`](models/training_meta.json).
 
 <div align="center">
 <img src="models/model_comparison.png" width="48%" />
 <img src="models/cm_random_forest.png" width="42%" />
 </div>
 
-> 📚 The dataset is trivially separable, so a naive model saturates at ~100%. The training methodology (and why the reported numbers are realistic and *consistent across every view*) is documented transparently in **[docs/ML-PIPELINE.md](docs/ML-PIPELINE.md)**.
+> 📚 CIC-DDoS2019 is trivially separable, so the training methodology — and why the figures are realistic and *consistent across every view* — is documented transparently in **[docs/ML-PIPELINE.md](docs/ML-PIPELINE.md)**.
 
 ---
 
