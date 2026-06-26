@@ -14,4 +14,4 @@ gunicorn==21.2.0
 scapy==2.7.0
 
 # Parquet support (only needed if training on .parquet datasets)
-pyarrow==24.0.0
+pyarrow==15.0.2
