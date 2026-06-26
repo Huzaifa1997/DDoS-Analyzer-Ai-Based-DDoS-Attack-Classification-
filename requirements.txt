@@ -7,3 +7,9 @@ seaborn==0.13.2
 joblib==1.4.2
 reportlab==4.2.0
 Werkzeug==3.0.3
+
+# Packet capture parsing (PCAP -> CSV feature extraction)
+scapy==2.7.0
+
+# Parquet support (only needed if training on .parquet datasets)
+pyarrow==24.0.0
