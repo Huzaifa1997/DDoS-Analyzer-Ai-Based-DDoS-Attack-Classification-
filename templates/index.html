@@ -333,8 +333,8 @@
               <!-- Top target ports -->
               <h4 style="margin-top:1rem">Top Targeted Ports (DDoS Flows)</h4>
               <table class="intel-table">
-                <thead><tr><th>Port</th><th>Flow Count</th></tr></thead>
-                <tbody id="tiPortsTbody"><tr><td colspan="2">—</td></tr></tbody>
+                <thead><tr><th>Port</th><th>Flow Count</th><th id="tiPortsDdosHead" style="display:none">Predicted DDoS</th></tr></thead>
+                <tbody id="tiPortsTbody"><tr><td colspan="3">—</td></tr></tbody>
               </table>
 
             </div>
@@ -399,10 +399,6 @@
               </div>
             </div>
           </div>
-          <p class="caption">
-            <i class="fa-solid fa-circle-info"></i>
-            Higher accuracy indicates better classification performance
-          </p>
         </div>
 
         <!-- Feature importance -->
