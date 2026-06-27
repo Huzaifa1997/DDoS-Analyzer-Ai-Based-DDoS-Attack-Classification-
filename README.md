@@ -296,6 +296,8 @@ Deep-dive docs live in the **[`docs/`](docs/)** folder:
 | **[Usage Guide](docs/USAGE.md)** | Labeled vs unlabeled, PCAP, reports, recommendations |
 | **[Configuration](docs/CONFIGURATION.md)** | `config.json`, env vars, tunables |
 
+📑 The project report and dataset reference live in the **[`documentation/`](documentation/)** folder (Phase-1 report + CIC-DDoS2019 dataset guidelines).
+
 ---
 
 ## 🗺️ Roadmap
