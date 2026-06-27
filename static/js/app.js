@@ -354,7 +354,7 @@ const App = {
       const form = new FormData();
       form.append('file', this.state.file);
       const res = await fetch('/analyze', { method: 'POST', body: form });
-      const data = await res.json();
+      const data = await this.readJsonResponse(res, 'Analysis');
       if (!data.success) throw new Error(data.error || 'Analysis failed.');
 
       this.$.progressFill.style.width = '100%';
@@ -375,6 +375,26 @@ const App = {
     } finally {
       clearInterval(tick);
       this.$.progressFill.style.width = '0%';
+    }
+  },
+
+  // Read a fetch Response as JSON, but degrade gracefully when the body isn't
+  // JSON — e.g. a plain "Not Found" 404 page, or a 502/503 while a free-tier
+  // host is still waking up. Prevents the cryptic
+  // "Unexpected token 'N', "Not Found" is not valid JSON" toast.
+  async readJsonResponse(res, what = 'Request') {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      if (res.status === 404) {
+        throw new Error(`${what} unavailable (404). The server may still be starting up — wait ~30s and try again.`);
+      }
+      if (res.status === 502 || res.status === 503 || res.status === 0) {
+        throw new Error(`Server is waking up or temporarily unavailable (${res.status}). Please wait a moment and try again.`);
+      }
+      const snippet = (text || '').trim().slice(0, 100);
+      throw new Error(`${what} failed — unexpected server response${snippet ? ` ("${snippet}")` : ''}.`);
     }
   },
 
