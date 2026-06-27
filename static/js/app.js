@@ -424,12 +424,14 @@ const App = {
     const card = document.getElementById('protocolChartSection');
     if (!card) return;
     const pd = d.traffic_intel && d.traffic_intel.protocol_dist;
-    const show = !d.has_ground_truth && pd
-      && ((pd.TCP || 0) + (pd.UDP || 0) + (pd.Other || 0) > 0);
+    const show = pd && ((pd.TCP || 0) + (pd.UDP || 0) + (pd.Other || 0) > 0);
 
     this.destroyChart('protocol');
     if (!show) { card.style.display = 'none'; return; }
     card.style.display = '';
+    // For labeled data the Confusion Matrix occupies the right grid slot, so let
+    // the protocol chart span the full width on its own row beneath it.
+    card.style.gridColumn = d.has_ground_truth ? '1 / -1' : '';
 
     const cs = getComputedStyle(document.body);
     const textCol = (cs.getPropertyValue('--text-dim').trim() || '#64748b');
@@ -754,17 +756,24 @@ const App = {
       document.getElementById('tiUDP').textContent = '—';
     }
 
-    // Top destination ports table
+    // Top destination ports table — "Predicted DDoS" column shown for labeled data
     const tbody = document.getElementById('tiPortsTbody');
+    const labeled = !!(d && d.has_ground_truth);
+    const ddosHead = document.getElementById('tiPortsDdosHead');
+    if (ddosHead) ddosHead.style.display = labeled ? '' : 'none';
     if (intel.top_dst_ports && intel.top_dst_ports.length) {
-      tbody.innerHTML = intel.top_dst_ports.map(p => `
+      tbody.innerHTML = intel.top_dst_ports.map(p => {
+        const flowCount = labeled ? (p.total_count ?? p.count) : p.count;
+        const ddosCell  = labeled ? `<td>${this.fmtNum(p.count)}</td>` : '';
+        return `
         <tr>
           <td>${this.escape(String(p.port))}</td>
-          <td>${this.fmtNum(p.count)}</td>
-        </tr>
-      `).join('');
+          <td>${this.fmtNum(flowCount)}</td>
+          ${ddosCell}
+        </tr>`;
+      }).join('');
     } else {
-      tbody.innerHTML = `<tr><td colspan="2" class="muted">Destination Port column not available</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${labeled ? 3 : 2}" class="muted">Destination Port column not available</td></tr>`;
     }
 
     // Flow stats comparison
