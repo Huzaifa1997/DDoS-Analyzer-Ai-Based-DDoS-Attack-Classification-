@@ -89,6 +89,12 @@
           </div>
           <h2 id="emptyTitle">No Dataset Loaded</h2>
           <p id="emptySubtitle">Upload a CSV file with network traffic data to begin analysis</p>
+          <p class="muted dataset-help-line">
+            <i class="fa-solid fa-circle-question"></i>
+            Need help with the dataset format?
+            <a href="#" id="datasetGuideLink"><i class="fa-solid fa-book-open"></i> Open the Dataset Guide</a>
+            (also in the left menu).
+          </p>
 
           <div class="upload-zone" id="dropZone">
             <i class="fa-solid fa-file-arrow-up upload-zone-icon"></i>
@@ -196,6 +202,14 @@
               <span class="sc-label">DDoS Traffic</span>
               <strong id="scDdos">—</strong>
               <span class="sc-sub" id="scDdosSub">—</span>
+            </div>
+          </div>
+          <div class="summary-card card" id="scReview" style="display:none">
+            <div class="sc-icon ico-warning"><i class="fa-solid fa-circle-question"></i></div>
+            <div class="sc-meta">
+              <span class="sc-label">Flows to Review</span>
+              <strong id="scReviewVal">—</strong>
+              <span class="sc-sub">borderline (60–85%)</span>
             </div>
           </div>
           <div class="summary-card card">
@@ -323,6 +337,27 @@
                 <tbody id="tiPortsTbody"><tr><td colspan="2">—</td></tr></tbody>
               </table>
 
+            </div>
+          </div>
+        </div>
+
+        <!-- Flows to Review (borderline confidence — needs manual attention) -->
+        <div id="reviewSection" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-circle-question"></i> Flows to Review</h3>
+              <span class="badge badge-soft">Needs your attention</span>
+            </div>
+            <div class="card-body">
+              <p class="muted" style="margin:0 0 10px">
+                Borderline flows (60–85% confidence), shown for visibility. Those at 70%+ are counted
+                as DDoS; the 60–70% ones are below the threshold (counted Normal). Verify the
+                source / destination IP and port before acting.
+              </p>
+              <table class="intel-table">
+                <thead><tr><th>Source IP</th><th>Destination IP</th><th>Port</th><th>Protocol</th><th>Confidence</th><th>Counted As</th></tr></thead>
+                <tbody id="reviewTbody"><tr><td colspan="6">—</td></tr></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -505,7 +540,8 @@
 
     <footer class="site-footer">
       <i class="fa-solid fa-shield-virus"></i>
-      DDoS Analyzer · CIC-DDoS2019 · Random Forest &amp; Logistic Regression · Local-only
+      DDoS Analyzer
+      <br/>© 2026 Huzaifa Zahid and team · All rights reserved.
     </footer>
   </div>
 

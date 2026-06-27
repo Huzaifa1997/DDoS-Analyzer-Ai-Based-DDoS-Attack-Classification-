@@ -167,6 +167,15 @@ const App = {
     $.clearBtn.addEventListener('click', () => this.clearFile());
     $.analyzeBtn.addEventListener('click', () => this.runAnalysis());
 
+    // "Open the Dataset Guide" helper link on the upload page
+    const datasetGuideLink = document.getElementById('datasetGuideLink');
+    if (datasetGuideLink) {
+      datasetGuideLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.switchView('guide');
+      });
+    }
+
     // Results actions
     $.rerunBtn.addEventListener('click', () => this.reset());
     $.cmSelect.addEventListener('change', (e) => this.renderConfusionMatrix(e.target.value));
@@ -311,7 +320,7 @@ const App = {
     }
 
     this.switchView('loading');
-    this.$.viewTitle.textContent = this.state.isPcap ? 'Converting &amp; Analyzing…' : 'Analyzing…';
+    this.$.viewTitle.textContent = this.state.isPcap ? 'Converting & Analyzing…' : 'Analyzing…';
     this.$.viewSubtitle.textContent = this.state.isPcap
       ? 'Extracting flows from PCAP, then running Random Forest and Logistic Regression'
       : 'Running Random Forest and Logistic Regression';
@@ -381,7 +390,32 @@ const App = {
     this.renderPerfCards(this.state.selectedModel);
     this.renderModelChart(d);
     this.renderTrafficIntel(d);
+    this.renderReviewFlows(d);
     this.renderRecs(d.recommendations || [], 'static');
+  },
+
+  // Borderline flows folded into Normal — surfaced for manual review (IP / port).
+  renderReviewFlows(d) {
+    const section = document.getElementById('reviewSection');
+    if (!section) return;
+    const flows = d.review_flows || [];
+    if (!flows.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    const tbody = document.getElementById('reviewTbody');
+    if (!tbody) return;
+    tbody.innerHTML = flows.map(f => {
+      const svc = (f.service && f.service !== 'Unknown' && f.service !== '—')
+        ? ' · ' + this.escape(f.service) : '';
+      return `
+        <tr>
+          <td>${this.escape(String(f.src_ip ?? '—'))}</td>
+          <td>${this.escape(String(f.dst_ip ?? '—'))}</td>
+          <td>${this.escape(f.dst_port == null ? '—' : String(f.dst_port))}${svc}</td>
+          <td>${this.escape(String(f.protocol ?? '—'))}</td>
+          <td>${f.confidence != null ? f.confidence + '%' : '—'}</td>
+          <td>${this.escape(String(f.counted_as ?? '—'))}</td>
+        </tr>`;
+    }).join('');
   },
 
   // Unlabeled mode: fill the right slot (where the confusion matrix sits in
@@ -525,10 +559,34 @@ const App = {
       this.$.scAcc.textContent   = 'N/A';
       this.$.scModel.textContent = 'No labels in file';
     }
+
+    // Flows-to-Review card (borderline flows folded into Normal)
+    const rev = document.getElementById('scReview');
+    if (rev) {
+      if ((d.review_count || 0) > 0) {
+        rev.style.display = '';
+        const v = document.getElementById('scReviewVal');
+        if (v) v.textContent = this.fmtNum(d.review_count);
+      } else {
+        rev.style.display = 'none';
+      }
+    }
   },
 
   renderThreatBanner(d) {
     const pct = d.ddos_percent || 0;
+
+    // Caution: nothing confirmed as DDoS, but borderline flows need review.
+    if ((d.ddos_count || 0) === 0 && (d.review_count || 0) > 0) {
+      this.$.threatLevel.textContent = 'Caution — Review Flagged Flows';
+      this.$.threatText.textContent  =
+        `No confirmed DDoS. ${d.review_count} borderline flow(s) were counted as Normal — ` +
+        `check the "Flows to Review" panel and verify their source / port.`;
+      this.$.threatIcon.className = 'threat-icon t-medium';
+      this.$.threatIcon.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+      return;
+    }
+
     let level, klass, icon, msg;
     if (pct >= 50) {
       level = 'Critical Threat'; klass = 't-critical'; icon = 'fa-skull-crossbones';

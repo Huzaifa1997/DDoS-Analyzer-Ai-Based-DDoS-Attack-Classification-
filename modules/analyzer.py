@@ -18,6 +18,15 @@ KNOWN_PORTS = {
     161: "SNMP", 3389: "RDP",
 }
 
+# A flow is counted as DDoS when the model's DDoS-class probability is >= 0.70.
+# For visibility, ANY flow above 0.60 (up to the high-confidence line 0.85) is also
+# listed in the "review" panel: those >= 0.70 are counted as DDoS (lower-confidence),
+# while 0.60–0.70 are below the threshold (counted Normal) but shown so the analyst
+# can eyeball them.
+DDOS_DETECT_THRESHOLD     = 0.70   # min DDoS-class probability to COUNT as DDoS
+DDOS_REVIEW_THRESHOLD     = 0.60   # min probability to SHOW a flow in the review list
+DDOS_CONFIDENCE_THRESHOLD = 0.85   # at/above this a DDoS flag is high-confidence (not reviewed)
+
 
 def load_models():
     rf = joblib.load(os.path.join(MODELS_DIR, "random_forest.pkl"))
@@ -106,6 +115,41 @@ def extract_traffic_features(df, best_preds, benign_idx, ddos_idx):
     return intel
 
 
+def _build_review_flows(df, review_mask, proba, n, limit=15):
+    """Build the 'needs your attention' list: borderline flows (model leaned DDoS
+    but not confirmed) with source/dest IP, port, protocol and confidence."""
+    if df is None or len(df) != n:
+        return []
+    df = df.reset_index(drop=True)
+    idx = np.where(review_mask)[0]
+    if len(idx) == 0:
+        return []
+    idx = idx[np.argsort(-proba[idx])][:limit]   # most-suspicious first
+    proto_name = {6: "TCP", 17: "UDP", 1: "ICMP"}
+
+    def cell(row, col):
+        return row[col] if col in df.columns else None
+
+    out = []
+    for i in idx:
+        row = df.iloc[int(i)]
+        try:    port = int(float(cell(row, "Destination Port")))
+        except (TypeError, ValueError): port = None
+        try:    pnum = int(float(cell(row, "Protocol")))
+        except (TypeError, ValueError): pnum = None
+        sip, dip = cell(row, "Source IP"), cell(row, "Destination IP")
+        out.append({
+            "src_ip":     str(sip) if sip is not None else "—",
+            "dst_ip":     str(dip) if dip is not None else "—",
+            "dst_port":   port,
+            "protocol":   proto_name.get(pnum, str(pnum) if pnum is not None else "—"),
+            "service":    KNOWN_PORTS.get(port, "Unknown") if port is not None else "—",
+            "confidence": round(float(proba[int(i)]) * 100, 1),
+            "counted_as": "DDoS" if float(proba[int(i)]) >= DDOS_DETECT_THRESHOLD else "Normal",
+        })
+    return out
+
+
 def run_analysis(X_scaled, y_raw, le, df_original=None):
     """
     Run both models on X_scaled.
@@ -138,12 +182,15 @@ def run_analysis(X_scaled, y_raw, le, df_original=None):
 
     has_live = y_true is not None and len(y_true) > 0
 
+    classes      = le_trained.classes_   # ['BENIGN', 'DDoS']
+    benign_idx   = list(classes).index("BENIGN") if "BENIGN" in classes else 0
+    ddos_idx     = 1 - benign_idx
+
     results = []
-    all_preds = {}
+    all_probas = {}
 
     for name, clf in models.items():
-        y_pred = clf.predict(X_scaled)
-        all_preds[name] = y_pred
+        all_probas[name] = clf.predict_proba(X_scaled)[:, ddos_idx]
 
         if has_live:
             y_pred_eval = clf.predict(X_eval)
@@ -178,37 +225,45 @@ def run_analysis(X_scaled, y_raw, le, df_original=None):
             "metrics_source":   metrics_source,
         })
 
-    # use best model's predictions for traffic counts
+    # ── DDoS counting (best model): probability > 0.50 → DDoS ───────────────
     best_name  = meta["best_model"]
-    best_preds = all_preds.get(best_name, list(all_preds.values())[0])
+    best_proba = all_probas.get(best_name, list(all_probas.values())[0])
+    total      = len(best_proba)
 
-    classes      = le_trained.classes_   # ['BENIGN', 'DDoS']
-    benign_idx   = list(classes).index("BENIGN") if "BENIGN" in classes else 0
-    ddos_idx     = 1 - benign_idx
+    ddos_mask = best_proba >= DDOS_DETECT_THRESHOLD
+    # show ALL borderline flows (review band 0.60–0.85) for visibility, whether or not
+    # they cleared the DDoS threshold
+    review    = (best_proba > DDOS_REVIEW_THRESHOLD) & (best_proba < DDOS_CONFIDENCE_THRESHOLD)
 
-    benign_count = int(np.sum(best_preds == benign_idx))
-    ddos_count   = int(np.sum(best_preds == ddos_idx))
-    total        = len(best_preds)
+    y_pred_best = np.where(ddos_mask, ddos_idx, benign_idx)
 
-    benign_pct = round(benign_count / total * 100, 2) if total else 0
-    ddos_pct   = round(ddos_count   / total * 100, 2) if total else 0
+    ddos_count   = int(np.sum(ddos_mask))
+    review_count = int(np.sum(review))
+    benign_count = total - ddos_count
+    benign_pct   = round(benign_count / total * 100, 2) if total else 0
+    ddos_pct     = round(ddos_count   / total * 100, 2) if total else 0
+
+    review_flows = _build_review_flows(df_original, review, best_proba, total)
 
     best_result   = next((r for r in results if r["name"] == best_name), results[0])
     best_accuracy = best_result["accuracy"]   # None when unlabeled
 
-    traffic_intel = extract_traffic_features(df_original, best_preds, benign_idx, ddos_idx)
+    traffic_intel = extract_traffic_features(df_original, y_pred_best, benign_idx, ddos_idx)
 
     return {
-        "total_records":    total,
-        "benign_count":     benign_count,
-        "ddos_count":       ddos_count,
-        "benign_percent":   benign_pct,
-        "ddos_percent":     ddos_pct,
-        "best_model":       best_name,
-        "best_accuracy":    best_accuracy,
-        "models":           results,
-        "has_ground_truth": has_live,
-        "traffic_intel":    traffic_intel,
+        "total_records":        total,
+        "benign_count":         benign_count,
+        "ddos_count":           ddos_count,
+        "review_count":         review_count,
+        "review_flows":         review_flows,
+        "confidence_threshold": DDOS_CONFIDENCE_THRESHOLD,
+        "benign_percent":       benign_pct,
+        "ddos_percent":         ddos_pct,
+        "best_model":           best_name,
+        "best_accuracy":        best_accuracy,
+        "models":               results,
+        "has_ground_truth":     has_live,
+        "traffic_intel":        traffic_intel,
     }
 
 
@@ -254,6 +309,21 @@ def build_recommendations(analysis):
             "text": f"Only {ddos_pct:.1f}% DDoS. Keep baseline edge hardening and per-IP "
                     f"connection limits in place as a precaution.",
             "command": "",
+        })
+
+    # flows flagged for manual review (borderline confidence / shape)
+    if analysis.get("review_count", 0) > 0:
+        lo  = int(round(DDOS_REVIEW_THRESHOLD * 100))
+        det = int(round(DDOS_DETECT_THRESHOLD * 100))
+        thr = int(round(analysis.get("confidence_threshold", 0.85) * 100))
+        recs.append({
+            "type":  "warning",
+            "icon":  "fa-circle-question",
+            "title": "Borderline Flows — Review",
+            "text":  (f"{analysis['review_count']} flow(s) scored in the {lo}–{thr}% confidence band "
+                      f"and are listed for review (those at {det}%+ are counted as DDoS; the rest are "
+                      f"below the threshold). Check their source/destination IP and port in the "
+                      f"'Flows to Review' panel."),
         })
 
     # 2. protocol-specific mitigation
