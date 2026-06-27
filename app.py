@@ -313,7 +313,7 @@ def export_pdf():
 @app.route("/docs/guidelines")
 def doc_guidelines():
     """Inline PDF view for the Dataset Guidelines document."""
-    path = "Dataset Guidelines.pdf"
+    path = "documentation/Dataset Guidelines.pdf"
     if not os.path.exists(path):
         abort(404)
     return send_file(path, mimetype="application/pdf")
@@ -321,7 +321,7 @@ def doc_guidelines():
 
 @app.route("/docs/guidelines/download")
 def doc_guidelines_download():
-    path = "Dataset Guidelines.pdf"
+    path = "documentation/Dataset Guidelines.pdf"
     if not os.path.exists(path):
         abort(404)
     return send_file(
