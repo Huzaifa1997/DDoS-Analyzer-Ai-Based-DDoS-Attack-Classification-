@@ -5,21 +5,17 @@
 flask==3.0.3
 Werkzeug==3.0.3
 gunicorn==21.2.0
-
 # Scientific stack — must match the training environment (see models/)
-numpy==2.4.6
+numpy==1.26.4
 scipy==1.17.1
-pandas==3.0.3
+pandas==2.2.3
 scikit-learn==1.9.0
 joblib==1.4.2
 threadpoolctl==3.6.0
-
 matplotlib==3.10.9
 seaborn==0.13.2
 reportlab==4.2.0
-
 # Packet capture parsing (PCAP -> CSV feature extraction)
 scapy==2.7.0
-
 # Parquet support (only needed if training on .parquet datasets)
 pyarrow==15.0.2
