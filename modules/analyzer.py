@@ -37,22 +37,6 @@ def load_models():
     return {"Random Forest": rf, "Logistic Regression": lr}, le, meta
 
 
-def _top_ports(ddos_df, col, n):
-    """Top-n ports (by flow count) among DDoS flows for the given column.
-    Returns a list of {port, count, service} or None if the column is absent."""
-    if ddos_df is None or col not in ddos_df.columns or len(ddos_df) == 0:
-        return None
-    ports = pd.to_numeric(ddos_df[col], errors="coerce").dropna()
-    if len(ports) == 0:
-        return None
-    counts = ports.astype("int64").value_counts().head(n)
-    return [
-        {"port": int(port), "count": int(cnt),
-         "service": KNOWN_PORTS.get(int(port), "Unknown")}
-        for port, cnt in counts.items()
-    ]
-
-
 def extract_traffic_features(df, best_preds, benign_idx, ddos_idx):
     """Derive traffic-intelligence stats from the ORIGINAL (unscaled) dataframe
     and the per-flow predictions. Every field degrades gracefully to None if the
@@ -85,9 +69,9 @@ def extract_traffic_features(df, best_preds, benign_idx, ddos_idx):
             other = int(len(ddos_df) - tcp - udp)
             intel["protocol_dist"] = {"TCP": tcp, "UDP": udp, "Other": other}
 
-        # top destination / source ports among DDoS flows
-        intel["top_dst_ports"] = _top_ports(ddos_df, "Destination Port", 10)
-        intel["top_src_ports"] = _top_ports(ddos_df, "Source Port", 5)
+        # top destination / source ports among DDoS flows (+ total flows per port)
+        intel["top_dst_ports"] = _top_ports(ddos_df, df, "Destination Port", 10)
+        intel["top_src_ports"] = _top_ports(ddos_df, df, "Source Port", 5)
 
         # average flow duration: DDoS vs benign
         if "Flow Duration" in df.columns:
@@ -113,6 +97,33 @@ def extract_traffic_features(df, best_preds, benign_idx, ddos_idx):
         return intel
 
     return intel
+
+
+def _top_ports(ddos_df, all_df, col, n):
+    """Top-n ports (by predicted-DDoS flow count) for the given column.
+    Each entry also carries `total_count` = total flows to that port across ALL
+    flows (used as 'Flow Count' for labeled data, with `count` = predicted DDoS).
+    Returns None if the column is absent / no DDoS flows."""
+    if ddos_df is None or col not in ddos_df.columns or len(ddos_df) == 0:
+        return None
+    ports = pd.to_numeric(ddos_df[col], errors="coerce").dropna()
+    if len(ports) == 0:
+        return None
+    counts = ports.astype("int64").value_counts().head(n)
+    total_vc = None
+    if all_df is not None and col in all_df.columns:
+        total_vc = (pd.to_numeric(all_df[col], errors="coerce")
+                    .dropna().astype("int64").value_counts())
+    out = []
+    for port, cnt in counts.items():
+        p = int(port)
+        out.append({
+            "port": p,
+            "count": int(cnt),                                          # predicted DDoS to this port
+            "total_count": int(total_vc.get(p, cnt)) if total_vc is not None else int(cnt),
+            "service": KNOWN_PORTS.get(p, "Unknown"),
+        })
+    return out
 
 
 def _build_review_flows(df, review_mask, proba, n, limit=15):
