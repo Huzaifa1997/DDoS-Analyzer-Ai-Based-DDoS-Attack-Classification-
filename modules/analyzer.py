@@ -176,20 +176,33 @@ def run_analysis(X_scaled, y_raw, le, df_original=None):
     """
     models, le_trained, meta = load_models()
 
-    # encode ground truth if present
+    # encode ground truth if present.
+    # Map labels to the SAME binary scheme used at training time: "BENIGN" (any
+    # case) -> benign; ANY other non-empty label (e.g. raw CIC attack names like
+    # "Syn", "UDP", "DrDoS_DNS", or "DDoS"/"DDOS") -> DDoS. Blank / NaN labels are
+    # excluded. Without this, a file that labels attacks with their specific names
+    # would have every attack row dropped from evaluation, giving TP = FN = 0.
     y_true = None
     X_eval = X_scaled
     if y_raw is not None:
-        known = set(le_trained.classes_)
-        y_true_all = np.array([
-            le_trained.transform([lbl])[0] if lbl in known else -1
-            for lbl in y_raw
-        ])
+        cls = list(le_trained.classes_)
+        benign_code = cls.index("BENIGN") if "BENIGN" in cls else 0
+        ddos_code   = 1 - benign_code
+        codes = []
+        for lbl in y_raw:
+            s = str(lbl).strip()
+            if s == "" or s.lower() == "nan":
+                codes.append(-1)                 # no usable label → skip this row
+            elif s.upper() == "BENIGN":
+                codes.append(benign_code)
+            else:
+                codes.append(ddos_code)          # any attack label counts as DDoS
+        y_true_all = np.array(codes)
         valid_mask = y_true_all != -1
         if valid_mask.any():
             X_eval = X_scaled[valid_mask]
             y_true = y_true_all[valid_mask]
-        # labels present but none recognised → treat as unlabeled (y_true stays None)
+        # labels present but all blank → treat as unlabeled (y_true stays None)
 
     has_live = y_true is not None and len(y_true) > 0
 
