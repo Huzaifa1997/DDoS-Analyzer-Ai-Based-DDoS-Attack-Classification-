@@ -249,8 +249,24 @@ def run_analysis(X_scaled, y_raw, le, df_original=None):
             "metrics_source":   metrics_source,
         })
 
-    # ── DDoS counting (best model): probability > 0.50 → DDoS ───────────────
-    best_name  = meta["best_model"]
+    # ── pick the "best" model ───────────────────────────────────────────────
+    # LABELED mode: report the model that actually performed best ON THIS FILE
+    # (by accuracy, then F1) — so if Logistic Regression beats Random Forest on
+    # the uploaded data, the dashboard says so instead of always showing RF.
+    # UNLABELED mode: no metrics to compare, so fall back to the model chosen at
+    # training time (meta["best_model"]).
+    if has_live:
+        best_result = max(
+            results,
+            key=lambda r: ((r["accuracy"]  if r["accuracy"]  is not None else -1.0),
+                           (r["f1_score"]  if r["f1_score"]  is not None else -1.0)),
+        )
+        best_name = best_result["name"]
+    else:
+        best_name   = meta["best_model"]
+        best_result = next((r for r in results if r["name"] == best_name), results[0])
+
+    # ── DDoS counting (best model): probability ≥ 0.70 → DDoS ────────────────
     best_proba = all_probas.get(best_name, list(all_probas.values())[0])
     total      = len(best_proba)
 
@@ -269,7 +285,6 @@ def run_analysis(X_scaled, y_raw, le, df_original=None):
 
     review_flows = _build_review_flows(df_original, review, best_proba, total)
 
-    best_result   = next((r for r in results if r["name"] == best_name), results[0])
     best_accuracy = best_result["accuracy"]   # None when unlabeled
 
     traffic_intel = extract_traffic_features(df_original, y_pred_best, benign_idx, ddos_idx)
